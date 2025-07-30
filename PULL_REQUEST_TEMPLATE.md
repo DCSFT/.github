@@ -1,1 +1,1 @@
-- [ ] I confirm that the Jira ticket has a version specified and this PR targets the same version.
+- [ ] This PR aligns with the version set in the Jira ticket. Merging into develop will include it in the correct release branch when it's cut, avoiding unintended versions.
