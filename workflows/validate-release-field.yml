@@ -1,0 +1,30 @@
+name: validate-release-field
+on:
+  pull_request:
+    branches: [ "develop" ]   # adjust if needed
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR body for filled version
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          # Extract text between markers
+          ver=$(printf "%s" "$BODY" | sed -n 's/.*<!--VERSION-->\(.*\)<!--\/VERSION-->.*/\1/p' | tr -d '[:space:]')
+          if [ -z "${ver:-}" ] || [ "$ver" = "VERSION_PLACEHOLDER" ]; then
+            echo "::error::Fill the Next release version: replace VERSION_PLACEHOLDER with vX.Y.Z"
+            exit 1
+          fi
+          # SemVer check (optional leading v)
+          if ! printf "%s" "$ver" | grep -Eq '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version must look like v1.2.3"
+            exit 1
+          fi
+          echo "Declared version: $ver"
