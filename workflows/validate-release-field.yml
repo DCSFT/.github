@@ -1,30 +1,30 @@
-name: validate-release-field
+name: Validate PR
 on:
   pull_request:
-    branches: [ "develop" ]   # adjust if needed
-    types: [opened, edited, synchronize]
-
-permissions:
-  contents: read
+    types: [opened, reopened, edited, synchronize]
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR body for filled version
-        env:
-          BODY: ${{ github.event.pull_request.body }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check PR body
+        id: check
         run: |
-          set -euo pipefail
-          # Extract text between markers
-          ver=$(printf "%s" "$BODY" | sed -n 's/.*<!--VERSION-->\(.*\)<!--\/VERSION-->.*/\1/p' | tr -d '[:space:]')
-          if [ -z "${ver:-}" ] || [ "$ver" = "VERSION_PLACEHOLDER" ]; then
-            echo "::error::Fill the Next release version: replace VERSION_PLACEHOLDER with vX.Y.Z"
+          PR_BODY=$(jq -r '.pull_request.body' "$GITHUB_EVENT_PATH")
+          echo "Pull Request Body:"
+          echo "$PR_BODY"
+          
+          # Check for unchecked checkbox
+          if [[ "$PR_BODY" != *"- [x] I confirmed the next release version."* ]]; then
+            echo "::error::Checkbox 'I confirmed the next release version' is not checked."
             exit 1
           fi
-          # SemVer check (optional leading v)
-          if ! printf "%s" "$ver" | grep -Eq '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::Version must look like v1.2.3"
+
+          # Check for version placeholder
+          VERSION_PLACEHOLDER="VERSION_PLACEHOLDER"
+          if [[ "$PR_BODY" == *"$VERSION_PLACEHOLDER"* ]]; then
+            echo "::error::'VERSION_PLACEHOLDER' has not been replaced with a version number."
             exit 1
           fi
-          echo "Declared version: $ver"
