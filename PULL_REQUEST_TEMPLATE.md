@@ -1,1 +1,6 @@
-- [ ] This PR aligns with the version set in the Jira ticket. Merging into develop will include it in the correct release branch when it's cut, avoiding unintended versions.
+## Release coordination
+- [ ] I confirmed the next release version.
+
+**Next release version (SemVer, e.g. v2.9.7):** `v?.?.?`
+
+Notes (optional):
